@@ -1,4 +1,7 @@
 import asyncio
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.types import (
@@ -27,23 +30,23 @@ cart = {}
 # ================= PRODUCTS =================
 products = {
     "burger": [
-        ("🍔 Xan Burger", 45000, "images/xan burger.jpg"),
-        ("🍔 Black Burger", 40000, "images/black burger.jfif"),
-        ("🍔 Cheeseburger", 35000, "images/cheese burger.webp"),
-        ("🍔 Gamburger", 16000, "images/Gamburger.jpg"),
+        ("🍔 Xan Burger", 45000, "images/xan_burger.jpg"),
+        ("🍔 Black Burger", 40000, "images/black_burger.png"),
+        ("🍔 Cheeseburger", 35000, "images/cheese_burger.png"),
+        ("🍔 Gamburger", 16000, "images/gamburger.jpg"),
     ],
     "lavash": [
         ("🌯 Lavash", 35000, "images/lavash.jpg"),
-        ("🌯 Lavash 2x", 50000, "images/lavash 2x.jfif"),
-        ("🧀 Lavash sir", 40000, "images/sirli lavash.jfif"),
-        ("🌶 Lavash o‘tkir", 38000, "images/achchi lavash.jfif"),
+        ("🌯 Lavash 2x", 50000, "images/lavash_2x.jpg"),
+        ("🧀 Lavash sir", 40000, "images/sirli_lavash.jpg"),
+        ("🌶 Lavash o‘tkir", 38000, "images/achchi_lavash.png"),
         ("🌯 Donar", 50000, "images/donar.jpg"),
         ("🌯 Haggi", 40000, "images/haggi.jpg"),
     ],
     "drink": [
-        ("🥤 Cola 0.5L", 8000, "images/cola 0.5.jpg"),
-        ("🥤 Cola 1L", 12000, "images/cola 1l.webp"),
-        ("🥤 Fanta", 10000, "images/fanta 1l.webp"),
+        ("🥤 Cola 0.5L", 8000, "images/cola_05.png"),
+        ("🥤 Cola 1L", 12000, "images/cola_1l.png"),
+        ("🥤 Fanta", 10000, "images/fanta_1l.png"),
     ]
 }
 
@@ -105,12 +108,15 @@ async def category(message: types.Message):
     await message.answer("Kategoriya tanlang:", reply_markup=kb)
 
 # ================= PRODUCTS =================
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+
 @dp.callback_query(F.data.startswith("cat_"))
 async def show_products(callback: types.CallbackQuery):
     cat = callback.data.split("_")[1]
 
     for i, (name, price, img) in enumerate(products[cat]):
-        photo = FSInputFile(img)
+        photo = FSInputFile(BASE_DIR / img)
 
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(
@@ -124,7 +130,6 @@ async def show_products(callback: types.CallbackQuery):
             caption=f"{name} - {price} so‘m",
             reply_markup=kb
         )
-
 # ================= ADD =================
 @dp.callback_query(F.data.startswith("add_"))
 async def add(callback: types.CallbackQuery):
@@ -180,8 +185,11 @@ async def send_order(callback: types.CallbackQuery):
 
     await bot.send_message(ADMIN_ID, text)
 
-    cart[user_id] = []
+    # 📍 lokatsiya yuborish
+    loc = user['location']
+    await bot.send_location(ADMIN_ID, latitude=loc.latitude, longitude=loc.longitude)
 
+    cart[user_id] = []
     await callback.message.answer("✅ Buyurtma yuborildi!")
 
 # ================= RUN =================
